@@ -11,5 +11,7 @@ npm run build
 ```
 
 Step 2: Open Chrome, go to: chrome://extensions/
+
 Step 3: Enable developer mode
+
 Step 4: Click on Load unpacked, select dist folder of the project
