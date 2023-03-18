@@ -8,21 +8,36 @@ new CronJob(JOB, () => {
     crawl();
 }).start();
 
-chrome.runtime.sendMessage({
-    data: {
-        state: 'Idle',
-        msg: '',
-    },
+chrome.runtime.onConnect.addListener(function (port) {
+    sendPopup(port, 'show-result', { state: 'Idle', msg: '' });
+
+    setInterval(() => {
+        sendPopup(port, 'ping', { msg: 'ping' });
+    }, 10000);
+
+    port.onMessage.addListener(function (request) {
+        if (request.data.action === 'crawl') {
+            crawl({
+                port,
+                startDate: request.data.startDate,
+                endDate: request.data.endDate,
+            });
+        }
+
+        if (request.data.action === 'ping') {
+            //
+        }
+    });
 });
 
-chrome.runtime.onMessage.addListener(function (request) {
-    if (request.data.action === 'crawl') {
-        crawl({
-            startDate: request.data.startDate,
-            endDate: request.data.endDate,
-        });
-    }
-});
+async function sendPopup(port, action = '', extraData = {}) {
+    port.postMessage({
+        data: {
+            action,
+            ...extraData,
+        },
+    });
+}
 
 async function reload() {
     const [tab] = await chrome.tabs.query({
@@ -42,24 +57,22 @@ async function log(data) {
     console.log(data);
 }
 async function crawl(option = {}) {
-    chrome.runtime.sendMessage({
-        data: {
-            state: 'Running',
-            msg: '',
-        },
+    const { port } = option;
+
+    sendPopup(port, 'show-result', {
+        state: 'Running',
+        msg: '',
     });
     await reload();
-    await sleep(5000);
+    await sleep(10000);
     const { startTime, endTime } = getStartEndDateTime(option);
     const cookies = await getCookies('classin.com');
     const cookie = await generateClassinCookies(cookies);
     if (!cookie) {
         log(`${new Date()} Cookie not found`);
-        chrome.runtime.sendMessage({
-            data: {
-                state: 'Idle',
-                msg: 'FAILED: Cookie not found',
-            },
+        sendPopup(port, 'show-result', {
+            state: 'Idle',
+            msg: 'FAILED: Cookie not found',
         });
         return;
     }
@@ -69,11 +82,9 @@ async function crawl(option = {}) {
         endTime,
         cookie,
     });
-    chrome.runtime.sendMessage({
-        data: {
-            state: 'Idle',
-            msg: result,
-        },
+    sendPopup(port, 'show-result', {
+        state: 'Idle',
+        msg: result,
     });
 }
 
