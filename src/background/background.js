@@ -245,15 +245,12 @@ async function sleep(time) {
 
 async function storeData(data, collection, isTruncate) {
     const body = JSON.stringify({ collection, data, isTruncate });
-    const response = await fetch(
-        `http://localhost:8000/api/crawl-port/store-data-N4EiM5X8VZ`,
-        {
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            method: 'POST',
-            body,
-        }
-    );
+    const response = await fetch(URL, {
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        method: 'POST',
+        body,
+    });
     return response;
 }
