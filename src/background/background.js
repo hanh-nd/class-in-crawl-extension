@@ -24,6 +24,23 @@ chrome.runtime.onMessage.addListener(function (request) {
     }
 });
 
+async function reload() {
+    const [tab] = await chrome.tabs.query({
+        url: 'https://console.classin.com/*',
+    });
+    await chrome.tabs.reload(tab.id);
+}
+
+async function log(data) {
+    // await fetch(LOG_URL, {
+    //     headers: {
+    //         'Content-Type': 'application/json',
+    //     },
+    //     method: 'POST',
+    //     body: JSON.stringify({ data }),
+    // });
+    console.log(data);
+}
 async function crawl(option = {}) {
     chrome.runtime.sendMessage({
         data: {
@@ -31,11 +48,13 @@ async function crawl(option = {}) {
             msg: '',
         },
     });
+    await reload();
+    await sleep(5000);
     const { startTime, endTime } = getStartEndDateTime(option);
     const cookies = await getCookies('classin.com');
     const cookie = await generateClassinCookies(cookies);
     if (!cookie) {
-        console.log('Cookie not found');
+        log(`${new Date()} Cookie not found`);
         chrome.runtime.sendMessage({
             data: {
                 state: 'Idle',
@@ -225,7 +244,7 @@ async function cloneLesson({ startTime, endTime, cookie }) {
                     page++;
                 }
             } else {
-                console.log(rs.statusText);
+                log(`${new Date()} ${rs.statusText}`);
             }
             console.log(
                 `=========== Done cloneLesson page = ${page} ===========`
@@ -234,8 +253,8 @@ async function cloneLesson({ startTime, endTime, cookie }) {
         } while (data.length);
         return `DONE. Collection: ${collection}, data-length: ${dataCount}`;
     } catch (e) {
-        console.log(e);
-        return `FAILED ${JSON.stringify(e)}`;
+        log(`${new Date()} ${e.message}`);
+        return `FAILED ${e.message}`;
     }
 }
 
