@@ -1,6 +1,4 @@
-const port = chrome.runtime.connect({ name: 'class-in-extension' });
-
-port.onMessage.addListener(function (request) {
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     if (request.data.action === 'show-result') {
         const state = document.getElementById('state');
         const result = document.getElementById('result');
@@ -9,20 +7,23 @@ port.onMessage.addListener(function (request) {
     }
 
     if (request.data.action === 'ping') {
-        port.postMessage({
+        chrome.runtime.sendMessage({
             data: {
                 action: 'ping',
                 msg: 'pong',
             },
         });
     }
+
+    sendResponse();
+    return true;
 });
 
 async function crawl() {
     const startDate = document.getElementById('startDate');
     const endDate = document.getElementById('endDate');
 
-    port.postMessage({
+    chrome.runtime.sendMessage({
         data: {
             action: 'crawl',
             startDate: startDate.value,

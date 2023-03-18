@@ -3,40 +3,43 @@ const { CronJob } = require('cron');
 
 const JOB = '0 */12 * * *';
 const URL = 'http://localhost:8000/api/crawl-port/store-data-N4EiM5X8VZ';
+// const LOG_URL = 'http://localhost:8000/api/crawl-port/log';
 
 new CronJob(JOB, () => {
     crawl();
 }).start();
 
-chrome.runtime.onConnect.addListener(function (port) {
-    sendPopup(port, 'show-result', { state: 'Idle', msg: '' });
+sendPopup('show-result', { state: 'Idle', msg: '' });
 
-    setInterval(() => {
-        sendPopup(port, 'ping', { msg: 'ping' });
-    }, 10000);
+setInterval(() => {
+    sendPopup('ping', { msg: 'ping' });
+}, 10000);
 
-    port.onMessage.addListener(function (request) {
-        if (request.data.action === 'crawl') {
-            crawl({
-                port,
-                startDate: request.data.startDate,
-                endDate: request.data.endDate,
-            });
-        }
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+    if (request.data.action === 'crawl') {
+        crawl({
+            startDate: request.data.startDate,
+            endDate: request.data.endDate,
+        });
+    }
 
-        if (request.data.action === 'ping') {
-            //
-        }
-    });
+    if (request.data.action === 'ping') {
+        console.log('bg pong');
+    }
+
+    sendResponse();
+    return true;
 });
 
-async function sendPopup(port, action = '', extraData = {}) {
-    port.postMessage({
-        data: {
-            action,
-            ...extraData,
-        },
-    });
+async function sendPopup(action = '', extraData = {}) {
+    try {
+        await chrome.runtime.sendMessage({
+            data: {
+                action,
+                ...extraData,
+            },
+        });
+    } catch (error) {}
 }
 
 async function reload() {
@@ -57,9 +60,7 @@ async function log(data) {
     console.log(data);
 }
 async function crawl(option = {}) {
-    const { port } = option;
-
-    sendPopup(port, 'show-result', {
+    sendPopup('show-result', {
         state: 'Running',
         msg: '',
     });
@@ -70,7 +71,7 @@ async function crawl(option = {}) {
     const cookie = await generateClassinCookies(cookies);
     if (!cookie) {
         log(`${new Date()} Cookie not found`);
-        sendPopup(port, 'show-result', {
+        sendPopup('show-result', {
             state: 'Idle',
             msg: 'FAILED: Cookie not found',
         });
@@ -82,7 +83,8 @@ async function crawl(option = {}) {
         endTime,
         cookie,
     });
-    sendPopup(port, 'show-result', {
+
+    sendPopup('show-result', {
         state: 'Idle',
         msg: result,
     });
