@@ -1,0 +1,27 @@
+{
+    "name": "class-in-extension",
+    "description": "crawl data from class-in console",
+    "homepage_url": "http://chrome.google.com/webstore",
+    "version": "0.0.1",
+    "version_name": "0.0.1",
+    "manifest_version": 3,
+    "default_locale": "en",
+    "minimum_chrome_version": "88",
+    "permissions": ["cookies", "activeTab", "tabs"],
+    "host_permissions": ["<all_urls>"],
+    "icons": {
+        "128": "assets/img/icon-128.png"
+    },
+    "background": {
+        "service_worker": "background.js"
+    },
+    "action": {
+        "default_icon": {
+            "16": "assets/img/icon-16.png",
+            "32": "assets/img/icon-32.png",
+            "48": "assets/img/icon-48.png"
+        },
+        "default_title": "__MSG_appName__",
+        "default_popup": "popup.html"
+    }
+}

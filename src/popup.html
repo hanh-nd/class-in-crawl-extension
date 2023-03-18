@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" href="popup.css" />
+    </head>
+    <style>
+        body {
+            width: 500px;
+        }
+    </style>
+    <body>
+        <main>
+            <div class="container">
+                <h1 class="heading">Class-in</h1>
+                <p id="state">State:</p>
+                <p id="result">Result:</p>
+
+                <form action="">
+                    <label>Select start date</label>
+                    <input type="date" id="startDate" name="startDate" />
+                    <label>Select end date</label>
+                    <input type="date" id="endDate" name="endDate" />
+                </form>
+
+                <div id="main-content">
+                    <button id="do-btn">Crawl</button>
+                </div>
+            </div>
+        </main>
+    </body>
+    <script type="text/javascript" src="popup.js"></script>
+</html>
