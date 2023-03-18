@@ -28,7 +28,7 @@ async function reload() {
     const [tab] = await chrome.tabs.query({
         url: 'https://console.classin.com/*',
     });
-    await chrome.tabs.reload(tab.id);
+    await chrome.tabs.reload(tab?.id);
 }
 
 async function log(data) {
