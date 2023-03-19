@@ -3,7 +3,11 @@ const { CronJob } = require('cron');
 
 const JOB = '0 */12 * * *';
 const URL = 'http://localhost:8000/api/crawl-port/store-data-N4EiM5X8VZ';
-// const LOG_URL = 'http://localhost:8000/api/crawl-port/log';
+const LOG_URL = 'http://localhost:8000/api/crawl-port/log';
+const CHAT_ID_TELEGRAM = '-606582597';
+const TOKEN_TELEGRAM_CHATBOT = '6229371384:AAFJBbEjwt43nwigEZoZykvURpZTWWu8Wow';
+const TELE_LOG_URL =
+    'https://api.telegram.org/bot' + TOKEN_TELEGRAM_CHATBOT + '/sendMessage';
 
 new CronJob(JOB, () => {
     crawl();
@@ -24,7 +28,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     }
 
     if (request.data.action === 'ping') {
-        console.log('bg pong');
+        //
     }
 
     sendResponse();
@@ -47,16 +51,32 @@ async function reload() {
         url: 'https://console.classin.com/*',
     });
     await chrome.tabs.reload(tab?.id);
+    console.log('reloaded');
 }
 
 async function log(data) {
-    // await fetch(LOG_URL, {
-    //     headers: {
-    //         'Content-Type': 'application/json',
-    //     },
-    //     method: 'POST',
-    //     body: JSON.stringify({ data }),
-    // });
+    try {
+        // await fetch(LOG_URL, {
+        //     headers: {
+        //         'Content-Type': 'application/json',
+        //     },
+        //     method: 'POST',
+        //     body: JSON.stringify({ data }),
+        // });
+        await fetch(TELE_LOG_URL, {
+            headers: {
+                'Content-Type': 'application/json',
+                'cache-control': 'no-cache',
+            },
+            method: 'POST',
+            body: JSON.stringify({
+                chat_id: CHAT_ID_TELEGRAM,
+                text: data,
+            }),
+        });
+    } catch (error) {
+        console.log(error);
+    }
     console.log(data);
 }
 async function crawl(option = {}) {
@@ -241,7 +261,7 @@ async function cloneLesson({ startTime, endTime, cookie }) {
                             'https://console.classin.com/saas/school/index.html',
                         'Referrer-Policy': 'strict-origin-when-cross-origin',
                     },
-                    body: `page=${page}&perpage=${limit}&sort=%7B%22sortName%22%3A%22classBtime%22%2C%22sortValue%22%3A1%7D&classStatus=1%2C2%2C3&timeRange=%7B%22startTime%22%3A${startTime}%2C%22endTime%22%3A${endTime}%7D`,
+                    body: `page=${page}&perpage=${limit}&sort=%7B%22sortName%22%3A%22classBtime%22%2C%22sortValue%22%3A1%7D&timeRange=%7B%22startTime%22%3A${startTime}%2C%22endTime%22%3A${endTime}%7D`,
                     method: 'POST',
                 }
             );
@@ -254,13 +274,12 @@ async function cloneLesson({ startTime, endTime, cookie }) {
                     dataCount += data.length;
                     await storeData(data, collection, isTruncate);
                     isTruncate = false;
-                    page++;
                 }
             } else {
                 log(`${new Date()} ${rs.statusText}`);
             }
             console.log(
-                `=========== Done cloneLesson page = ${page} ===========`
+                `=========== Done cloneLesson page = ${page++} ===========`
             );
             await sleep(1000);
         } while (data.length);
