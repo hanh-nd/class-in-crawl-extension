@@ -3,9 +3,8 @@ const { CronJob } = require('cron');
 
 const JOB = '0 */12 * * *';
 const URL = 'http://localhost:8000/api/crawl-port/store-data-N4EiM5X8VZ';
-const LOG_URL = 'http://localhost:8000/api/crawl-port/log';
-const CHAT_ID_TELEGRAM = '-606582597';
-const TOKEN_TELEGRAM_CHATBOT = '6229371384:AAFJBbEjwt43nwigEZoZykvURpZTWWu8Wow';
+const CHAT_ID_TELEGRAM = '';
+const TOKEN_TELEGRAM_CHATBOT = '';
 const TELE_LOG_URL =
     'https://api.telegram.org/bot' + TOKEN_TELEGRAM_CHATBOT + '/sendMessage';
 
@@ -56,24 +55,19 @@ async function reload() {
 
 async function log(data) {
     try {
-        // await fetch(LOG_URL, {
-        //     headers: {
-        //         'Content-Type': 'application/json',
-        //     },
-        //     method: 'POST',
-        //     body: JSON.stringify({ data }),
-        // });
-        await fetch(TELE_LOG_URL, {
-            headers: {
-                'Content-Type': 'application/json',
-                'cache-control': 'no-cache',
-            },
-            method: 'POST',
-            body: JSON.stringify({
-                chat_id: CHAT_ID_TELEGRAM,
-                text: data,
-            }),
-        });
+        if (CHAT_ID_TELEGRAM && TOKEN_TELEGRAM_CHATBOT) {
+            await fetch(TELE_LOG_URL, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'cache-control': 'no-cache',
+                },
+                method: 'POST',
+                body: JSON.stringify({
+                    chat_id: CHAT_ID_TELEGRAM,
+                    text: data,
+                }),
+            });
+        }
     } catch (error) {
         console.log(error);
     }
@@ -103,7 +97,7 @@ async function crawl(option = {}) {
         endTime,
         cookie,
     });
-
+    log(`${new Date()} ${result}`);
     sendPopup('show-result', {
         state: 'Idle',
         msg: result,
@@ -285,7 +279,6 @@ async function cloneLesson({ startTime, endTime, cookie }) {
         } while (data.length);
         return `DONE. Collection: ${collection}, data-length: ${dataCount}`;
     } catch (e) {
-        log(`${new Date()} ${e.message}`);
         return `FAILED ${e.message}`;
     }
 }
