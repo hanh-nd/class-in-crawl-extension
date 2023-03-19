@@ -45,6 +45,12 @@ async function sendPopup(action = '', extraData = {}) {
     } catch (error) {}
 }
 
+async function crawl(options = {}) {
+    await reload();
+    await sleep(5000);
+    await crawlDataClassin(options);
+}
+
 async function reload() {
     const [tab] = await chrome.tabs.query({
         url: 'https://console.classin.com/*',
@@ -73,13 +79,12 @@ async function log(data) {
     }
     console.log(data);
 }
-async function crawl(option = {}) {
+
+async function crawlDataClassin(option = {}) {
     sendPopup('show-result', {
         state: 'Running',
         msg: '',
     });
-    await reload();
-    await sleep(10000);
     const { startTime, endTime } = getStartEndDateTime(option);
     const cookies = await getCookies('classin.com');
     const cookie = await generateClassinCookies(cookies);
