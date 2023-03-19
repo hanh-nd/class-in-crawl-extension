@@ -46,9 +46,18 @@ async function sendPopup(action = '', extraData = {}) {
 }
 
 async function crawl(options = {}) {
+    sendPopup('show-result', {
+        state: 'Running',
+        msg: '',
+    });
     await reload();
     await sleep(5000);
-    await crawlDataClassin(options);
+    const result = await crawlDataClassin(options);
+    log(`${new Date()} ${result}`);
+    sendPopup('show-result', {
+        state: 'Idle',
+        msg: result,
+    });
 }
 
 async function reload() {
@@ -81,20 +90,11 @@ async function log(data) {
 }
 
 async function crawlDataClassin(option = {}) {
-    sendPopup('show-result', {
-        state: 'Running',
-        msg: '',
-    });
     const { startTime, endTime } = getStartEndDateTime(option);
     const cookies = await getCookies('classin.com');
     const cookie = await generateClassinCookies(cookies);
     if (!cookie) {
-        log(`${new Date()} Cookie not found`);
-        sendPopup('show-result', {
-            state: 'Idle',
-            msg: 'FAILED: Cookie not found',
-        });
-        return;
+        return 'FAILED: Cookie not found';
     }
 
     const result = await cloneLesson({
@@ -102,11 +102,7 @@ async function crawlDataClassin(option = {}) {
         endTime,
         cookie,
     });
-    log(`${new Date()} ${result}`);
-    sendPopup('show-result', {
-        state: 'Idle',
-        msg: result,
-    });
+    return result;
 }
 
 function getStartEndDateTime({ startDate, endDate }) {
