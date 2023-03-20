@@ -7,9 +7,10 @@ const CHAT_ID_TELEGRAM = '';
 const TOKEN_TELEGRAM_CHATBOT = '';
 const TELE_LOG_URL =
     'https://api.telegram.org/bot' + TOKEN_TELEGRAM_CHATBOT + '/sendMessage';
+const NUMBER_OF_RETRIES = 3;
 
 new CronJob(JOB, () => {
-    crawl();
+    crawlWithRetries(NUMBER_OF_RETRIES);
 }).start();
 
 sendPopup('show-result', { state: 'Idle', msg: '' });
@@ -45,19 +46,30 @@ async function sendPopup(action = '', extraData = {}) {
     } catch (error) {}
 }
 
+async function crawlWithRetries(times = 1, options = {}) {
+    for (let i = 1; i <= times; i++) {
+        const result = await crawl(options);
+        if (result.code === 1) {
+            return;
+        }
+        await sleep(times * 10000);
+    }
+}
+
 async function crawl(options = {}) {
     sendPopup('show-result', {
         state: 'Running',
         msg: '',
     });
     await reload();
-    await sleep(5000);
+    await sleep(10000);
     const result = await crawlDataClassin(options);
-    log(`${new Date()} ${result}`);
+    log(`${new Date()} ${result.message}`);
     sendPopup('show-result', {
         state: 'Idle',
-        msg: result,
+        msg: result.message,
     });
+    return result;
 }
 
 async function reload() {
@@ -94,7 +106,10 @@ async function crawlDataClassin(option = {}) {
     const cookies = await getCookies('classin.com');
     const cookie = await generateClassinCookies(cookies);
     if (!cookie) {
-        return 'FAILED: Cookie not found';
+        return {
+            code: 3,
+            message: 'FAILED: Cookie not found',
+        };
     }
 
     const result = await cloneLesson({
@@ -278,9 +293,15 @@ async function cloneLesson({ startTime, endTime, cookie }) {
             );
             await sleep(1000);
         } while (data.length);
-        return `DONE. Collection: ${collection}, data-length: ${dataCount}`;
+        return {
+            code: 1,
+            message: `DONE. Collection: ${collection}, data-length: ${dataCount}`,
+        };
     } catch (e) {
-        return `FAILED ${e.message}`;
+        return {
+            code: 2,
+            message: `FAILED ${e.message}`,
+        };
     }
 }
 
