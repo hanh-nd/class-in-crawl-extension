@@ -1,15 +1,18 @@
 const moment = require('moment');
 const { CronJob } = require('cron');
 
-const JOB = '0 */12 * * *';
-const URL = 'http://localhost:8000/api/crawl-port/store-data-N4EiM5X8VZ';
-const CHAT_ID_TELEGRAM = '';
-const TOKEN_TELEGRAM_CHATBOT = '';
-const TELE_LOG_URL =
-    'https://api.telegram.org/bot' + TOKEN_TELEGRAM_CHATBOT + '/sendMessage';
+const CRON_TIME = '*/20 * * * *';
+
+const DOMAIN = 'http://localhost:8000';
+const STORE_DATA_URL = `${DOMAIN}/api/crawl-port/store-data-N4EiM5X8VZ`;
+
+const CHAT_ID_TELEGRAM = '-606582597';
+const TOKEN_TELEGRAM_CHATBOT = '6229371384:AAFJBbEjwt43nwigEZoZykvURpZTWWu8Wow';
+const TELE_LOG_URL = `https://api.telegram.org/bot${TOKEN_TELEGRAM_CHATBOT}/sendMessage`;
+
 const NUMBER_OF_RETRIES = 3;
 
-new CronJob(JOB, () => {
+new CronJob(CRON_TIME, () => {
     crawlWithRetries(NUMBER_OF_RETRIES);
 }).start();
 
@@ -54,7 +57,7 @@ async function crawlWithRetries(times = 1, options = {}) {
         if (result.code === 1) {
             return;
         }
-        await sleep(times * 10000);
+        await sleep(times * 5000);
     }
 }
 
@@ -64,9 +67,13 @@ async function crawl(options = {}) {
         msg: '',
     });
     await reload();
-    await sleep(10000);
+    await sleep(5000);
     const result = await crawlDataClassin(options);
-    log(`${new Date()} ${result.message}`);
+    // log(`${new Date()} ${result.message}`);
+    if (result.code !== 1) {
+        // only log when error
+        log(`${new Date()} ${result.message}`);
+    }
     sendPopup('show-result', {
         state: 'Idle',
         msg: result.message,
@@ -302,7 +309,7 @@ async function cloneLesson({ startTime, endTime, cookie }) {
     } catch (e) {
         return {
             code: 2,
-            message: `FAILED ${e.message}`,
+            message: `FAILED ${e.stack || e.message}`,
         };
     }
 }
@@ -313,7 +320,7 @@ async function sleep(time) {
 
 async function storeData(data, collection, isTruncate) {
     const body = JSON.stringify({ collection, data, isTruncate });
-    const response = await fetch(URL, {
+    const response = await fetch(STORE_DATA_URL, {
         headers: {
             'Content-Type': 'application/json',
         },
