@@ -13,7 +13,9 @@ new CronJob(JOB, () => {
     crawlWithRetries(NUMBER_OF_RETRIES);
 }).start();
 
-sendPopup('show-result', { state: 'Idle', msg: '' });
+chrome.runtime.onStartup.addListener(function () {
+    sendPopup('show-result', { state: 'Idle', msg: '' });
+});
 
 setInterval(() => {
     sendPopup('ping', { msg: 'ping' });
