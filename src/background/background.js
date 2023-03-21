@@ -29,6 +29,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
         crawl({
             startDate: request.data.startDate,
             endDate: request.data.endDate,
+            isCheckDuplicated: request.data.isCheckDuplicated || false,
         });
     }
 
@@ -69,11 +70,7 @@ async function crawl(options = {}) {
     await reload();
     await sleep(5000);
     const result = await crawlDataClassin(options);
-    // log(`${new Date()} ${result.message}`);
-    if (result.code !== 1) {
-        // only log when error
-        log(`${new Date()} ${result.message}`);
-    }
+    log(`${new Date()} ${result.message}`);
     sendPopup('show-result', {
         state: 'Idle',
         msg: result.message,
@@ -124,6 +121,7 @@ async function crawlDataClassin(option = {}) {
     const result = await cloneLesson({
         startTime,
         endTime,
+        isCheckDuplicated: option.isCheckDuplicated,
         cookie,
     });
     return result;
@@ -236,7 +234,12 @@ async function generateClassinCookies(cookies = []) {
  * clone lessons
  * @param {*} conditions
  */
-async function cloneLesson({ startTime, endTime, cookie }) {
+async function cloneLesson({
+    startTime,
+    endTime,
+    cookie,
+    isCheckDuplicated = true,
+}) {
     try {
         let page = 1,
             limit = 50;
@@ -302,6 +305,9 @@ async function cloneLesson({ startTime, endTime, cookie }) {
             );
             await sleep(1000);
         } while (data.length);
+        if (isCheckDuplicated) {
+            await storeData([], collection, false, true);
+        }
         return {
             code: 1,
             message: `DONE. Collection: ${collection}, data-length: ${dataCount}`,
@@ -309,7 +315,7 @@ async function cloneLesson({ startTime, endTime, cookie }) {
     } catch (e) {
         return {
             code: 2,
-            message: `FAILED ${e.stack || e.message}`,
+            message: `FAILED ${e.message}`,
         };
     }
 }
@@ -318,8 +324,8 @@ async function sleep(time) {
     return await new Promise((resolve) => setTimeout(resolve, time));
 }
 
-async function storeData(data, collection, isTruncate) {
-    const body = JSON.stringify({ collection, data, isTruncate });
+async function storeData(data, collection, isTruncate, isDone = false) {
+    const body = JSON.stringify({ collection, data, isTruncate, isDone });
     const response = await fetch(STORE_DATA_URL, {
         headers: {
             'Content-Type': 'application/json',

@@ -1,8 +1,6 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <link rel="stylesheet" href="popup.css" />
-    </head>
+    <head></head>
     <style>
         body {
             width: 500px;
@@ -15,12 +13,22 @@
                 <p id="state">State:</p>
                 <p id="result">Result:</p>
 
-                <form action="">
+                <div>
                     <label>Select start date</label>
                     <input type="date" id="startDate" name="startDate" />
                     <label>Select end date</label>
                     <input type="date" id="endDate" name="endDate" />
-                </form>
+                </div>
+                <div>
+                    <input
+                        type="checkbox"
+                        id="checkDuplicated"
+                        name="checkDuplicated"
+                    />
+                    <label for="checkDuplicated"
+                        >Check duplicated lessons after done</label
+                    ><br />
+                </div>
 
                 <div id="main-content">
                     <button id="do-btn">Crawl</button>

@@ -22,12 +22,14 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 async function crawl() {
     const startDate = document.getElementById('startDate');
     const endDate = document.getElementById('endDate');
+    const isCheckDuplicated = document.getElementById('checkDuplicated');
 
     chrome.runtime.sendMessage({
         data: {
             action: 'crawl',
             startDate: startDate.value,
             endDate: endDate.value,
+            isCheckDuplicated: isCheckDuplicated.checked,
         },
     });
 }
