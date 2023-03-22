@@ -19,19 +19,12 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     return true;
 });
 
-async function crawl() {
-    const startDate = document.getElementById('startDate');
-    const endDate = document.getElementById('endDate');
-    const isCheckDuplicated = document.getElementById('checkDuplicated');
-
+async function getCookie() {
     chrome.runtime.sendMessage({
         data: {
             action: 'crawl',
-            startDate: startDate.value,
-            endDate: endDate.value,
-            isCheckDuplicated: isCheckDuplicated.checked,
         },
     });
 }
 
-document.getElementById('do-btn').addEventListener('click', crawl);
+document.getElementById('do-btn').addEventListener('click', getCookie);
