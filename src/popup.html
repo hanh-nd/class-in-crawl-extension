@@ -5,6 +5,14 @@
         body {
             width: 500px;
         }
+
+        .pv-8 {
+            padding: 8px 0;
+        }
+
+        .pv-4 {
+            padding: 4px 0;
+        }
     </style>
     <body>
         <main>
@@ -14,10 +22,14 @@
                 <p id="result">Result:</p>
 
                 <div id="main-content">
-                    <button id="do-btn">Get cookie</button>
+                    <div class="section">
+                        <h3>===== Cookie =====</h3>
+                        <button id="do-btn">Get cookie</button>
+                    </div>
 
-                    <div>
-                        <div class="date-select">
+                    <div class="section">
+                        <h3>===== Crawl lessons =====</h3>
+                        <div class="options pv-4">
                             <label for="startDate">Start date:</label>
                             <input
                                 type="date"
@@ -27,8 +39,16 @@
 
                             <label for="startDate">End date:</label>
                             <input type="date" id="endDate" name="endDate" />
+
+                            <label for="crawlMembers">Crawl members?</label>
+                            <input
+                                type="checkbox"
+                                id="crawlMembers"
+                                name="crawlMembers"
+                                checked
+                            />
                         </div>
-                        <div class="action">
+                        <div class="action pv-4">
                             <button id="do-crawl-lessons">Crawl lessons</button>
                         </div>
                     </div>

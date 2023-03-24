@@ -30,6 +30,8 @@ async function getCookie() {
 async function requestCrawlLessons() {
     const startDate = document.getElementById('startDate')?.value;
     const endDate = document.getElementById('endDate')?.value;
+    const crawlMembers =
+        document.getElementById('crawlMembers')?.checked || false;
 
     chrome.runtime.sendMessage({
         data: {
@@ -37,11 +39,16 @@ async function requestCrawlLessons() {
             payload: {
                 startDate,
                 endDate,
+                crawlMembers,
             },
         },
     });
 }
 
+document.getElementById('startDate').addEventListener('change', () => {
+    const endDate = document.getElementById('endDate');
+    endDate.value = document.getElementById('startDate')?.value;
+});
 document.getElementById('do-btn').addEventListener('click', getCookie);
 document
     .getElementById('do-crawl-lessons')

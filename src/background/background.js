@@ -62,7 +62,7 @@ function setStateResult(state = 'Idle', result = '') {
 
 async function generateWithRetries(times = NUMBER_OF_RETRIES) {
     for (let i = 1; i <= times; i++) {
-        const result = await generate(options);
+        const result = await generate();
         if (result.code === 1) {
             return;
         }
@@ -79,6 +79,7 @@ async function generate(options = {}) {
     await reload();
     await sleep(5000);
     const result = await generateClassinCookie(options);
+    console.log('ec', result);
     setStateResult('Idle', result.message);
     sendPopup('show-result', {
         state: 'Idle',
@@ -275,30 +276,43 @@ async function storeData(data) {
     return response;
 }
 
-async function requestCrawlLessons({ startDate, endDate } = {}) {
-    setStateResult('Running');
-    sendPopup('show-result', {
-        state: 'Running',
-        msg: '',
-    });
-    const body = JSON.stringify({
-        startDate: startDate
-            ? moment(startDate).format('YYYY_MM_DD')
-            : undefined,
-        endDate: endDate ? moment(endDate).format('YYYY_MM_DD') : undefined,
-    });
-    const response = await fetch(REQUEST_CRAWL_LESSONS_URL, {
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        method: 'POST',
-        body,
-    });
-    const message = await response.text();
-    setStateResult('Idle', message);
-    sendPopup('show-result', {
-        state: 'Idle',
-        msg: message,
-    });
-    return response;
+async function requestCrawlLessons({
+    startDate,
+    endDate,
+    crawlMembers = false,
+} = {}) {
+    try {
+        setStateResult('Running');
+        sendPopup('show-result', {
+            state: 'Running',
+            msg: '',
+        });
+        const body = JSON.stringify({
+            startDate: startDate
+                ? moment(startDate).format('YYYY_MM_DD')
+                : undefined,
+            endDate: endDate ? moment(endDate).format('YYYY_MM_DD') : undefined,
+            crawlMembers,
+        });
+        const response = await fetch(REQUEST_CRAWL_LESSONS_URL, {
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            method: 'POST',
+            body,
+        });
+        const message = await response.text();
+        setStateResult('Idle', `DONE: ${message}`);
+        sendPopup('show-result', {
+            state: 'Idle',
+            msg: `DONE: ${message}`,
+        });
+        return response;
+    } catch (error) {
+        setStateResult('Idle', `FAILED: ${error.message}`);
+        sendPopup('show-result', {
+            state: 'Idle',
+            msg: `FAILED: ${error.message}`,
+        });
+    }
 }
