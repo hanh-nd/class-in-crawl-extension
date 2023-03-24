@@ -5,16 +5,16 @@ const CRON_TIME = '*/20 * * * *';
 
 const DOMAIN = 'http://localhost:8000';
 const STORE_DATA_URL = `${DOMAIN}/api/crawl-port/store-data-N4EiM5X8VZ`;
+const REQUEST_CRAWL_LESSONS_URL = `${DOMAIN}/api/crawl-port/crawl-lessons-Ei9vKxHAQa`;
 
 const NUMBER_OF_RETRIES = 3;
+
+let lastState = 'Idle';
+let lastResult = '';
 
 new CronJob(CRON_TIME, () => {
     generateWithRetries(NUMBER_OF_RETRIES);
 }).start();
-
-chrome.runtime.onStartup.addListener(function () {
-    sendPopup('show-result', { state: 'Idle', msg: '' });
-});
 
 setInterval(() => {
     sendPopup('ping', { msg: 'ping' });
@@ -27,6 +27,17 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 
     if (request.data.action === 'ping') {
         //
+    }
+
+    if (request.data.action === 'request-crawl-lessons') {
+        requestCrawlLessons(request.data.payload);
+    }
+
+    if (request.data.action === 'initialize') {
+        sendPopup('show-result', {
+            state: lastState,
+            msg: lastResult,
+        });
     }
 
     sendResponse();
@@ -44,6 +55,11 @@ async function sendPopup(action = '', extraData = {}) {
     } catch (error) {}
 }
 
+function setStateResult(state = 'Idle', result = '') {
+    lastState = state;
+    lastResult = result;
+}
+
 async function generateWithRetries(times = NUMBER_OF_RETRIES) {
     for (let i = 1; i <= times; i++) {
         const result = await generate(options);
@@ -55,6 +71,7 @@ async function generateWithRetries(times = NUMBER_OF_RETRIES) {
 }
 
 async function generate(options = {}) {
+    setStateResult('Running');
     sendPopup('show-result', {
         state: 'Running',
         msg: '',
@@ -62,6 +79,7 @@ async function generate(options = {}) {
     await reload();
     await sleep(5000);
     const result = await generateClassinCookie(options);
+    setStateResult('Idle', result.message);
     sendPopup('show-result', {
         state: 'Idle',
         msg: result.message,
@@ -253,6 +271,34 @@ async function storeData(data) {
         },
         method: 'POST',
         body,
+    });
+    return response;
+}
+
+async function requestCrawlLessons({ startDate, endDate } = {}) {
+    setStateResult('Running');
+    sendPopup('show-result', {
+        state: 'Running',
+        msg: '',
+    });
+    const body = JSON.stringify({
+        startDate: startDate
+            ? moment(startDate).format('YYYY_MM_DD')
+            : undefined,
+        endDate: endDate ? moment(endDate).format('YYYY_MM_DD') : undefined,
+    });
+    const response = await fetch(REQUEST_CRAWL_LESSONS_URL, {
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        method: 'POST',
+        body,
+    });
+    const message = await response.text();
+    setStateResult('Idle', message);
+    sendPopup('show-result', {
+        state: 'Idle',
+        msg: message,
     });
     return response;
 }

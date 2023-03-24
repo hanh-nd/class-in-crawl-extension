@@ -27,4 +27,30 @@ async function getCookie() {
     });
 }
 
+async function requestCrawlLessons() {
+    const startDate = document.getElementById('startDate')?.value;
+    const endDate = document.getElementById('endDate')?.value;
+
+    chrome.runtime.sendMessage({
+        data: {
+            action: 'request-crawl-lessons',
+            payload: {
+                startDate,
+                endDate,
+            },
+        },
+    });
+}
+
 document.getElementById('do-btn').addEventListener('click', getCookie);
+document
+    .getElementById('do-crawl-lessons')
+    .addEventListener('click', requestCrawlLessons);
+
+window.onload = () => {
+    chrome.runtime.sendMessage({
+        data: {
+            action: 'initialize',
+        },
+    });
+};
