@@ -76,10 +76,17 @@ async function generate(options = {}) {
         state: 'Running',
         msg: '',
     });
-    await reload();
+    let result = await reload();
+    if (result.code !== 1) {
+        setStateResult('Idle', result.message);
+        sendPopup('show-result', {
+            state: 'Idle',
+            msg: result.message,
+        });
+        return result;
+    }
     await sleep(5000);
-    const result = await generateClassinCookie(options);
-    console.log('ec', result);
+    result = await generateClassinCookie(options);
     setStateResult('Idle', result.message);
     sendPopup('show-result', {
         state: 'Idle',
@@ -92,8 +99,18 @@ async function reload() {
     const [tab] = await chrome.tabs.query({
         url: 'https://console.classin.com/*',
     });
+    if (!tab) {
+        return {
+            code: 3,
+            message: 'FAILED. class-in tab not opened',
+        };
+    }
     await chrome.tabs.reload(tab?.id);
     console.log('reloaded');
+    return {
+        code: 1,
+        message: 'reloaded',
+    };
 }
 
 async function generateClassinCookie() {
